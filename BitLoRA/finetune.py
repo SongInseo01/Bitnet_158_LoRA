@@ -1,4 +1,4 @@
-# python -m BitLoRA_finetune.finetune
+# python ~/Desktop/isfolder/Bit_158_research/Bitnet_158_LoRA$ python -m BitLoRA.finetune
 
 import torch
 from torch import nn
@@ -32,38 +32,30 @@ for name, module in model.named_modules():
 
 
 def replace_linear_with_bitnet_linear(model, previous_dtype: Optional[torch.dtype] = None):
-    """
-    """
-    # Recursively replace linear layers
     if previous_dtype is None:
         previous_dtype = torch.get_default_dtype()
-
         model_dtype = model.dtype
         torch.set_default_dtype(model_dtype)
-
         previous_dtype = model_dtype
 
     for name, module in model.named_children():
         if len(list(module.children())) > 0:
             replace_linear_with_bitnet_linear(module, previous_dtype=previous_dtype)
-        
-        # Replace nn.Linear layers, but skip 'lm_head'
-        if name != 'lm_head' and isinstance(module, nn.Linear):
+
+        if isinstance(module, nn.Linear):
             in_features = module.in_features
             out_features = module.out_features
             bias = module.bias is not None
 
             with torch.device(module.weight.device):
-                # Create a new instance of the custom linear layer
                 new_layer = BitLinear(in_features, out_features, bias=bias)
-                # Copy weights and biases
                 with torch.no_grad():
                     new_layer.weight.copy_(module.weight)
                     if bias:
                         new_layer.bias.copy_(module.bias)
-            
-            # Replace the layer in the model
+
             setattr(model, name, new_layer)
+
     return model
 
 # 2. BitLinear로 Linear 대체

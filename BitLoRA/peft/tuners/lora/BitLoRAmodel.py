@@ -161,7 +161,46 @@ class BitLoraModel(BaseTuner):
             else:
                 raise NotImplementedError(f"Requested bias: {bias}, is not implemented.")
 
-    # def _create_new_modele() -> BitLoRAlayer.py의 dispatch_default()안에 isinstance(target_base_layer, BitLinear) 분기로 대체
+    # def _create_new_module() -> BitLoRAlayer.py의 dispatch_default()안에 isinstance(target_base_layer, BitLinear) 분기로 대체
+    @staticmethod
+    def _create_new_module(bitlora_config, adapter_name, target, **kwargs):
+        """
+        BitLoRA에 맞게 LoRA 레이어를 생성하는 함수.
+
+        BitLinear를 기반으로 하는 레이어만 지원하며,
+        nn.Linear 등의 다른 레이어는 처리하지 않는다.
+        """
+
+        from .BitLoRAlayer import BitLoraLayer
+        from .BitLoRAlayer import BitLoraLinear
+        from ....BitNet.bitnet import BitLinear
+
+        if isinstance(target, BaseTunerLayer):
+            target_base_layer = target.get_base_layer()
+        else:
+            target_base_layer = target
+
+        # BitLinear가 아닌 경우 처리하지 않음
+        if isinstance(target_base_layer, BitLinear):
+            return BitLoraLinear(
+                target=target,
+                adapter_name=adapter_name,
+                r=kwargs.get("r"),
+                lora_alpha=kwargs.get("lora_alpha"),
+                lora_dropout=kwargs.get("lora_dropout"),
+                fan_in_fan_out=kwargs.get("fan_in_fan_out"),
+                init_lora_weights=kwargs.get("init_lora_weights", True),
+                use_rslora=kwargs.get("use_rslora", False),
+                lora_bias=kwargs.get("lora_bias", "none"),
+                # 필요 시 추가적으로 확장
+            )
+
+        # 지원하지 않는 레이어일 경우 에러 발생
+        raise ValueError(
+            f"[BitLoRAModel] Unsupported module type for BitLoRA: {type(target_base_layer)}. "
+            f"Expected BitLinear, got {type(target_base_layer)}."
+        )
+
 
     def __getattr__(self, name: str):
         """Forward missing attributes to the wrapped module."""
