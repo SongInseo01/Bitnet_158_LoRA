@@ -267,10 +267,11 @@ class BitLoraModel(BaseTuner):
                     module.unmerge()
                 module.set_adapter(adapter_name)
 
-        if isinstance(adapter_name, str):
-            self.active_adapters = [adapter_name]
-        else:
-            self.active_adapters = adapter_name
+        # if isinstance(adapter_name, str):
+        #     self.active_adapters = [adapter_name]
+        # else:
+        #     self.active_adapters = adapter_name
+        self.active_adapter = adapter_name
 
     @contextmanager
     def _enable_peft_forward_hooks(self, *args, **kwargs):
