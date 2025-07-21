@@ -70,9 +70,11 @@ class BitLoraLayer(BaseTunerLayer):
             lora_dropout_layer = nn.Identity()
         self.lora_dropout.update(nn.ModuleDict({adapter_name: lora_dropout_layer}))
 
+        # base_model과 adapter의 dtype이 다른 에러를 해결하기 위한 코드
+        dtype = self.base_layer.weight.dtype
         # Actual trainable parameters
-        self.lora_A[adapter_name] = BitLinear(self.in_features, r, bias=False)
-        self.lora_B[adapter_name] = BitLinear(r, self.out_features, bias=lora_bias)
+        self.lora_A[adapter_name] = BitLinear(self.in_features, r, bias=False).to(dtype)
+        self.lora_B[adapter_name] = BitLinear(r, self.out_features, bias=lora_bias).to(dtype)
         self.lora_bias[adapter_name] = lora_bias
 
         if use_rslora:
