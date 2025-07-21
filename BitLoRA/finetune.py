@@ -84,6 +84,8 @@ for name, module in model.named_modules():
         print(f"[LoRA Layer] {name}")
         for adapter in module.lora_A:
             print(f"  - adapter: {adapter}, A.shape: {module.lora_A[adapter].weight.shape}")
+print(model.model.model.layers[30].self_attn.v_proj.weight.dtype)
+print(model.model.model.layers[30].self_attn.v_proj.lora_A['default'].weight.dtype)
 
 # 4. 예시 데이터셋 불러오기
 dataset = load_dataset("Abirate/english_quotes")
