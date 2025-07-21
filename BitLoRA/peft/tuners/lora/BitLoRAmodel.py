@@ -183,6 +183,7 @@ class BitLoraModel(BaseTuner):
         # BitLinear가 아닌 경우 처리하지 않음
         if isinstance(target_base_layer, BitLinear):
             return BitLoraLinear(
+                base_layer=target_base_layer,
                 target=target,
                 adapter_name=adapter_name,
                 r=kwargs.get("r"),
