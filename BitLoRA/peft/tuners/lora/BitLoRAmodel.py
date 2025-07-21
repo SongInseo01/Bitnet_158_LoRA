@@ -116,7 +116,7 @@ class BitLoraModel(BaseTuner):
                 lora_bias=bitlora_config.lora_bias,
             )
         else:
-            new_module = self._create_new_bitlora_module(bitlora_config, adapter_name, target, **kwargs)
+            new_module = self._create_new_module(bitlora_config, adapter_name, target, **kwargs)
             if adapter_name not in self.active_adapters:
                 new_module.requires_grad_(False)
             self._replace_module(parent, target_name, new_module, target)
