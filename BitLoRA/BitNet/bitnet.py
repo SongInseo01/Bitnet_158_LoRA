@@ -25,6 +25,7 @@ class BitLinear(nn.Module):
         with torch.cuda.device(w.device):
             x_quant = x + (activation_quant_triton(x) - x).detach()
             w_quant = w + (weight_quant_triton(w) - w).detach()
+            w_quant = w_quant.to(x_quant.dtype)
             print(f"[BitLinear] w_quant unique: {w_quant.unique(sorted=True)}") # [-1, 0, 1] 인지 확인
 
         y = F.linear(x_quant, w_quant, bias=self.bias)
