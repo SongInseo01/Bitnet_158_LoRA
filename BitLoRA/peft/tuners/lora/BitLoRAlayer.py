@@ -71,10 +71,10 @@ class BitLoraLayer(BaseTunerLayer):
         self.lora_dropout.update(nn.ModuleDict({adapter_name: lora_dropout_layer}))
 
         # base_model과 adapter의 dtype이 다른 에러를 해결하기 위한 코드
-        dtype = self.base_layer.weight.dtype
+        # dtype = self.base_layer.weight.dtype
         # Actual trainable parameters
-        self.lora_A[adapter_name] = BitLinear(self.in_features, r, bias=False).to(dtype)
-        self.lora_B[adapter_name] = BitLinear(r, self.out_features, bias=lora_bias).to(dtype)
+        self.lora_A[adapter_name] = BitLinear(self.in_features, r, bias=False)# .to(dtype)
+        self.lora_B[adapter_name] = BitLinear(r, self.out_features, bias=lora_bias)# .to(dtype)
         self.lora_bias[adapter_name] = lora_bias
 
         if use_rslora:
@@ -94,7 +94,18 @@ class BitLoraLayer(BaseTunerLayer):
         elif init_lora_weights:
             self.reset_lora_parameters(adapter_name, init_lora_weights)
         # call this before dora_init
-        self._move_adapter_to_device_of_base_layer(adapter_name)
+        # self._move_adapter_to_device_of_base_layer(adapter_name)
+        
+        for weight_name in ("weight", "qweight"):
+            weight = getattr(self.get_base_layer(), weight_name, None)
+            if weight is not None:
+                # the layer is already completely initialized, this is an update
+                if weight.dtype.is_floating_point or weight.dtype.is_complex:
+                    self.to(weight.device, dtype=weight.dtype)
+                else:
+                    self.to(weight.device)
+                break
+        
 
         self.set_adapter(self.active_adapters)
 
